@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book Appointment</title>
+</head>
+<body>
+    <form id="formId">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" required>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <button type="submit">Submit</button>
+    </form>
+    <div id="output"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"></script>
+    <script>
+        var formName = document.getElementById('formId');
+        formName.addEventListener('submit', addNewUser);
+
+        function addNewUser(event) {
+            event.preventDefault();
+            var userName = document.getElementById('name').value;
+            var userAge = document.getElementById('age').value;
+            var userEmail = document.getElementById('email').value;
+
+            const newUser = {
+                name: userName,
+                age: userAge,
+                email: userEmail
+            };
+
+            axios.post('https://crudcrud.com/api/7f88fc698a7f4a85a2b8d33171b0cc02/appointmentbooking', newUser)
+                .then(res => {
+                    console.log('Details Stored Successfully:', res.data);
+                    displayDetails(res.data);
+                })
+                .catch(err => console.log("Something Went Wrong...!"))
+        }
+
+        function displayDetails(data) {
+            var outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = `
+                <p>Name: ${data.name}</p>
+                <p>Age: ${data.age}</p>
+                <p>Email: ${data.email}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
