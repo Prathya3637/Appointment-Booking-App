@@ -46,9 +46,39 @@
         function displayDetails(data) {
             var outputDiv = document.getElementById('output');
             var listItem = document.createElement('li');
-            listItem.textContent = `Name: ${data.name}, Age: ${data.age}, Email: ${data.email}`;
+            var deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+    
+            // Add a data-id attribute to the delete button to store the corresponding data ID
+            deleteButton.setAttribute('data-id', data._id);
+
+            deleteButton.addEventListener('click', function () {
+                var dataId = deleteButton.getAttribute('data-id');
+
+                // Remove the list item from the screen
+                listItem.remove();
+
+                // Delete the corresponding data from the API using axios
+                axios.delete(`https://crudcrud.com/api/7f88fc698a7f4a85a2b8d33171b0cc02/appointmentbooking/${dataId}`)
+                .then(res => {
+                    console.log('Data deleted successfully:', res.data);
+                })
+                .catch(err => console.log('Error deleting data:', err));
+            });
+
+            // Create a separate element for the text content
+            var textContentElement = document.createElement('span');
+            textContentElement.textContent = `Name: ${data.name}, Age: ${data.age}, Email: ${data.email}`;
+
+            // Append the delete button and text content to the list item
+            listItem.appendChild(textContentElement);
+            listItem.appendChild(deleteButton);
+
+            // Append the list item to the output div
             outputDiv.appendChild(listItem);
         }
+
+
 
 
         function getUserDetails() {
