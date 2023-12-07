@@ -14,6 +14,9 @@
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" required>
 
+        <input type="hidden" id="editMode" value="false"> <!-- Added hidden field for edit mode -->
+        <input type="hidden" id="editedListItemId" value=""> <!-- Added hidden field for edited item ID -->
+
         <button type="submit">Submit</button>
         <button onclick="getUserDetails()">Get Details</button>
     </form>
@@ -21,36 +24,55 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"></script>
     <script>
         var formName = document.getElementById('formId');
-        formName.addEventListener('submit', addNewUser);
+        formName.addEventListener('submit', addOrUpdateUser);
 
-        function addNewUser(event) {
+        function addOrUpdateUser(event) {
             event.preventDefault();
             var userName = document.getElementById('name').value;
             var userAge = document.getElementById('age').value;
             var userEmail = document.getElementById('email').value;
+            var editMode = document.getElementById('editMode').value === 'true';
+            var editedListItemId = document.getElementById('editedListItemId').value;
 
-            const newUser = {
-                name: userName,
-                age: userAge,
-                email: userEmail
-            };
+            if (editMode) {
+                // If in edit mode, update the existing list item
+                var editedListItem = document.getElementById(editedListItemId);
+                var textContentElement = editedListItem.querySelector('span');
+                textContentElement.textContent = `Name: ${userName}, Age: ${userAge}, Email: ${userEmail}`;
+                clearForm();
+                // Reset the form to add mode
+                document.getElementById('editMode').value = 'false';
+                document.getElementById('editedListItemId').value = '';
+            } else {
+                // If not in edit mode, add a new list item
+                const newUser = {
+                    name: userName,
+                    age: userAge,
+                    email: userEmail
+                };
 
-            axios.post('https://crudcrud.com/api/7f88fc698a7f4a85a2b8d33171b0cc02/appointmentbooking', newUser)
-                .then(res => {
-                    console.log('Details Stored Successfully:', res.data);
-                    displayDetails(res.data);
-                })
-                .catch(err => console.log("Something Went Wrong...!"))
+                axios.post('https://crudcrud.com/api/7f88fc698a7f4a85a2b8d33171b0cc02/appointmentbooking', newUser)
+                    .then(res => {
+                        console.log('Details Stored Successfully:', res.data);
+                        displayDetails(res.data);
+                        clearForm();
+                    })
+                    .catch(err => console.log("Something Went Wrong...!"))
+            }
         }
 
         function displayDetails(data) {
             var outputDiv = document.getElementById('output');
             var listItem = document.createElement('li');
             var deleteButton = document.createElement('button');
+            var editButton = document.createElement('button');
+            
             deleteButton.textContent = 'Delete';
-    
-            // Add a data-id attribute to the delete button to store the corresponding data ID
+            editButton.textContent = 'Edit';
+
+            // Add a data-id attribute to the buttons to store the corresponding data ID
             deleteButton.setAttribute('data-id', data._id);
+            editButton.setAttribute('data-id', data._id);
 
             deleteButton.addEventListener('click', function () {
                 var dataId = deleteButton.getAttribute('data-id');
@@ -66,32 +88,59 @@
                 .catch(err => console.log('Error deleting data:', err));
             });
 
+            editButton.addEventListener('click', function () {
+                var dataId = editButton.getAttribute('data-id');
+
+                // Set the form to edit mode
+                document.getElementById('editMode').value = 'true';
+                // Store the ID of the edited list item
+                document.getElementById('editedListItemId').value = dataId;
+
+                // Retrieve user details from the API for editing
+                axios.get(`https://crudcrud.com/api/7f88fc698a7f4a85a2b8d33171b0cc02/appointmentbooking/${dataId}`)
+                .then(res => {
+                    var userData = res.data;
+                    // Populate the form with user details for editing
+                    document.getElementById('name').value = userData.name;
+                    document.getElementById('age').value = userData.age;
+                    document.getElementById('email').value = userData.email;
+                })
+                .catch(err => console.log('Error fetching user details for editing:', err));
+            });
+
             // Create a separate element for the text content
             var textContentElement = document.createElement('span');
             textContentElement.textContent = `Name: ${data.name}, Age: ${data.age}, Email: ${data.email}`;
 
-            // Append the delete button and text content to the list item
+            // Set a unique ID for the list item
+            listItem.id = data._id;
+
+            // Append the delete and edit buttons and text content to the list item
             listItem.appendChild(textContentElement);
             listItem.appendChild(deleteButton);
+            listItem.appendChild(editButton);
 
             // Append the list item to the output div
             outputDiv.appendChild(listItem);
         }
 
-
-
+        function clearForm() {
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('email').value = '';
+        }
 
         function getUserDetails() {
             axios.get('https://crudcrud.com/api/7f88fc698a7f4a85a2b8d33171b0cc02/appointmentbooking')
             .then(res => {
                 console.log('Fetched Details:', res.data);
                 for (let i = 0; i < res.data.length; i++) {
-                displayDetails(res.data[i]);
+                    displayDetails(res.data[i]);
                 }
-        })
-        .catch(err => console.log("Something Went Wrong...!"))
+            })
+            .catch(err => console.log("Something Went Wrong...!"))
         }
-
     </script>
 </body>
 </html>
+
